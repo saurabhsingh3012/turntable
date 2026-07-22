@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+*.duckdb
+*.duckdb.wal
+data/raw/
+data/staging/
+.dagster/
+dbt/target/
+dbt/logs/
+.pytest_cache/
+.ruff_cache/
