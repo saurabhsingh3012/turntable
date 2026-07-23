@@ -5,8 +5,7 @@ venv/
 .env
 *.duckdb
 *.duckdb.wal
-data/raw/
-data/staging/
+data/
 .dagster/
 dbt/target/
 dbt/logs/

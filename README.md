@@ -86,16 +86,71 @@ Every resolved cluster keeps its full provenance chain. If the warehouse says tw
 
 ---
 
+## Real data — Discogs × MusicBrainz
+
+The resolver started life on a hand-built fixture. It now runs on **real API
+data**: `scripts/build_real_sample.py` pulls live records from Discogs and
+MusicBrainz and resolves them. Here is what happened, unedited, because the story
+is the point.
+
+**First real run.** 12 albums, 40 real records (12 Discogs pressings, 28
+MusicBrainz release-groups — the true match plus near-miss distractors per album):
+
+```
+                       fixture      real data (v1)
+precision                1.000            0.476
+recall                   1.000            1.000
+```
+
+Recall held — every true album was found. But precision **collapsed**, and the
+false positives were all the same shape: `Live in Rainbows`, `Rumours Live`,
+`Discovery Remixed`, `The Dark Side of the Moon (demos)`. Real near-miss
+release-groups — live albums, compilations, remixes — that share a title, an
+artist, and a year with the studio album, and that the clean fixture simply never
+contained. A scorer tuned on tidy data over-accepted them.
+
+**The fix, from domain knowledge.** MusicBrainz tags release-groups with
+*secondary-types* (Live / Compilation / Remix / Demo …) and Discogs encodes the
+same in its format descriptions — signals the resolver wasn't using. Adding a
+**release-type contradiction** (a studio pressing should not merge with a live
+release-group, even when everything else agrees) — as a veto that is a *no-op*
+when the field is absent, so the fixture is unaffected:
+
+```
+                       real (v1)     real (v2, release-type)
+precision                0.476              0.833
+recall                   1.000              1.000
+F1                       0.645              0.909
+```
+
+Precision nearly doubled; recall stayed perfect; the fixture's 26 tests and its
+precision-1.000 are untouched (verified — the rule can't fire without the field).
+The two remaining false positives are genuinely hard (bonus discs and untagged
+sessions) and are honest future work, not swept away.
+
+> This is the whole point of running on real data: it revealed a limitation the
+> synthetic fixture *could not*, and fixing it made the resolver better in a way
+> that generalises. Reproduce with `python scripts/build_real_sample.py` (needs
+> Discogs + MusicBrainz configured in `.env`).
+
+**Source status:** Discogs search + MusicBrainz work today. Last.fm (listening
+history) and Setlist.fm (concerts) clients are built and awaiting a username /
+approved key. A private Discogs collection needs the OAuth toggle. The seed album
+list stands in for the owner's collection — swap it in and the same pipeline runs.
+
 ## Status
 
-See [ROADMAP.md](ROADMAP.md). Short version: architecture and scaffold done, Discogs ingestion in progress, everything downstream is stubs and interfaces.
+See [ROADMAP.md](ROADMAP.md). Resolver done and now validated on real Discogs ×
+MusicBrainz data; Last.fm / Setlist.fm clients built and awaiting credentials;
+warehouse + dashboard still ahead.
 
 ## Running it
 
 ```bash
-uv sync
-cp .env.example .env      # add your API keys
-dagster dev               # asset graph at localhost:3000
+pip install -e ".[dev]"
+cp .env.example .env                     # add your API keys
+python scripts/build_real_sample.py      # real Discogs x MusicBrainz resolution
+pytest -q                                # 35 unit + regression tests
 ```
 
 ## Licence

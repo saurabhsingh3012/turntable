@@ -48,6 +48,11 @@ CATALOGUE_MATCH_SCORE = 0.97
 DURATION_CONTRADICTION_THRESHOLD = 0.25  # relative difference
 DURATION_CONTRADICTION_PENALTY = 0.75
 
+# A studio-vs-live (or vs compilation/remix) mismatch is strong evidence of
+# "different release". Penalty is heavier than the runtime one because the
+# signal is categorical, not fuzzy. Only applied when both sides declare a type.
+RELEASE_TYPE_CONTRADICTION_PENALTY = 0.55
+
 AUTO_ACCEPT = 0.85
 AUTO_REJECT = 0.55
 # Between the two thresholds, a human decides. See resolve/cluster.py.
@@ -256,6 +261,27 @@ def score_pair(left: dict, right: dict) -> MatchExplanation:
                 f"({left_duration}s vs {right_duration}s) -- score damped by "
                 f"{1 - DURATION_CONTRADICTION_PENALTY:.0%}"
             )
+
+    # --- Release-type contradiction ---------------------------------------
+    # A live album, compilation, or remix is a DIFFERENT release from the studio
+    # album a collector owns, even when title/artist/year all agree. Real data
+    # made this necessary: on the first Discogs x MusicBrainz run, near-miss
+    # release-groups ("Live in Rainbows", "Discovery Remixed", "...Sessions")
+    # matched at accept because title dominated and track/duration were missing.
+    # MusicBrainz secondary-types and Discogs format descriptions both expose
+    # this, normalised to the same vocabulary (see sources.base.special_types).
+    #
+    # No-op when either side lacks the field (the hand-built fixture has no
+    # release_type key), so the fixture evaluation is unaffected.
+    left_type = left.get("release_type")
+    right_type = right.get("release_type")
+    if left_type is not None and right_type is not None and left_type != right_type:
+        score *= RELEASE_TYPE_CONTRADICTION_PENALTY
+        explanation.notes.append(
+            f"release-type contradiction: '{left_type or 'studio'}' vs "
+            f"'{right_type or 'studio'}' -- score damped by "
+            f"{1 - RELEASE_TYPE_CONTRADICTION_PENALTY:.0%}"
+        )
 
     explanation.score = round(score, 4)
     explanation.features = {k: round(v, 4) for k, v in available.items()}

@@ -34,12 +34,23 @@ multiplicative veto rather than a weighted feature, on the reasoning that *any*
 weighted mean has this failure mode. The pair now scores 0.637 and routes to
 human review. Locked in by `test_regression_self_titled_albums_do_not_merge`.
 
+## Real-data milestone (done)
+
+- [x] Discogs client — search + release detail (consumer key/secret), rate-limited
+- [x] MusicBrainz client — release-group lookup, 1 req/sec, descriptive User-Agent
+- [x] Real Discogs × MusicBrainz resolution run (`scripts/build_real_sample.py`)
+- [x] **Release-type contradiction** — found necessary by real data (live/comp/remix
+      near-misses); precision 0.476 → 0.833, recall held at 1.000, fixture unaffected
+- [x] Last.fm + Setlist.fm clients built (awaiting username / approved key)
+- [x] 35 tests incl. source-mapper + release-type regression tests
+
 ## Next
 
-- [ ] Discogs client — OAuth, rate limiting (60 req/min authenticated), pagination
-- [ ] Last.fm scrobble ingestion with incremental watermarks
-- [ ] MusicBrainz client — 1 req/sec limit, mandatory descriptive User-Agent
-- [ ] Setlist.fm concert history
+- [ ] Discogs OAuth 1.0a flow for the owner's private collection (or public toggle)
+- [ ] Last.fm scrobble ingestion once the listening username is set
+- [ ] Setlist.fm concert history once the key is approved (currently 403)
+- [ ] The 2 remaining real-data false positives (bonus discs, untagged sessions) —
+      needs primary-type and disambiguation signals
 - [ ] Raw landing tables, append-only with ingested_at
 - [ ] Dagster asset graph wiring ingestion to resolution
 - [ ] dbt staging + marts, tests on every mart model
