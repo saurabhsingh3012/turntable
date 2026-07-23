@@ -88,9 +88,7 @@ def _is_noise_annotation(inner: str) -> bool:
     if re.fullmatch(r"(19|20)\d{2}(\s+\w+)?", cleaned):
         return any(p in cleaned for p in _NOISE_PHRASES) or cleaned.isdigit()
     # Pure format tokens
-    if cleaned in {"vinyl", "cd", "digital", "cassette", "lp", "ep", "single"}:
-        return True
-    return False
+    return cleaned in {"vinyl", "cd", "digital", "cassette", "lp", "ep", "single"}
 
 
 def _strip_annotations(title: str) -> str:

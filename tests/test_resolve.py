@@ -16,7 +16,6 @@ from turntable.resolve.normalize import (
 )
 from turntable.resolve.scoring import jaro_winkler, score_pair
 
-
 # --- Normalization -------------------------------------------------------
 
 @pytest.mark.parametrize(
@@ -89,8 +88,10 @@ def test_jaro_winkler_rewards_shared_prefix() -> None:
 # --- Scoring -------------------------------------------------------------
 
 def test_catalogue_number_short_circuits() -> None:
-    left = {"title": "In Rainbows", "artist": "Radiohead", "catalogue_number": "XLLP 324"}
-    right = {"title": "wildly different", "artist": "Radiohead", "catalogue_number": "XLLP324"}
+    left = {"title": "In Rainbows", "artist": "Radiohead",
+            "catalogue_number": "XLLP 324"}
+    right = {"title": "wildly different", "artist": "Radiohead",
+             "catalogue_number": "XLLP324"}
     result = score_pair(left, right)
     assert result.verdict == "accept"
     assert "catalogue" in result.notes[0]

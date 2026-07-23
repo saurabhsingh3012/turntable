@@ -124,7 +124,7 @@ def jaro_winkler(s1: str, s2: str, prefix_weight: float = 0.1) -> float:
 
     # Winkler prefix bonus, capped at 4 characters by convention.
     prefix = 0
-    for c1, c2 in zip(s1[:4], s2[:4]):
+    for c1, c2 in zip(s1[:4], s2[:4], strict=False):
         if c1 != c2:
             break
         prefix += 1
